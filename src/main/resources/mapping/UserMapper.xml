@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hust.addrgeneration.dao.UserMapper">
+    <insert id="register" parameterType="String">
+        insert into register (NID, userID, phoneNumber, password)
+        values (#{NID}, #{userID}, #{phoneNumber}, #{password})
+    </insert>
+
+    <select id="getKey" parameterType="String" resultType="String">
+        select password from register where NID = #{NID}
+    </select>
+
+    <insert id="updateKey" parameterType="com.hust.addrgeneration.beans.KeyInfo">
+        insert into keyinfo (addrGenIP, ideakey, timeinfo)
+        values (#{addrGenIP}, #{ideaKey}, #{timeInfo})
+    </insert>
+    
+    <select id="getIdeaKey" parameterType="String" resultMap="QueryKeyList">
+        select ideakey, timeinfo from keyinfo where addrGenIP = #{addrGenIP}
+        order by timeinfo desc
+    </select>
+    <resultMap id="QueryKeyList" type="com.hust.addrgeneration.beans.QueryKeyInfo">
+        <result column="ideakey" property="ideaKey" />
+        <result column="timeinfo" property="timeInfo" />
+    </resultMap>
+
+    <insert id="updateAID" parameterType="String">
+        insert into aidinfo (aid, prefix)
+        values (#{aid}, #{prefix});
+    </insert>
+
+    <select id="getPrefix" parameterType="String" resultType="String">
+        select prefix from aidinfo where aid = #{AID}
+    </select>
+
+</mapper>
