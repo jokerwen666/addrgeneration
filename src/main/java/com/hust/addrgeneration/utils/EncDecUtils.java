@@ -4,6 +4,8 @@ import com.hust.addrgeneration.encrypt.IDEAUtils;
 import com.hust.addrgeneration.encrypt.SM2.SM2Utils;
 import com.hust.addrgeneration.encrypt.RSAUtils;
 
+import java.security.MessageDigest;
+
 public class EncDecUtils {
     final static String prikSM = "4cf170068e9c47ebdb521fb9fc62c4a55a5773fb9da33b0acf8129e28d09d205";
     final static String pubkSM = "04aabda53043e8dcb86d42f690b61a4db869821dadf9f851ec3c5c43d0c8f95a6677fdba984afc3bb010a8436b1d17cefc2011a34e01e9e801124d29ffa928d803";
@@ -50,5 +52,29 @@ public class EncDecUtils {
 
     public static String ideaDecrypt(String decryptData, String ideaKey) throws Exception {
         return IDEAUtils.ideaDecrypt(decryptData, ideaKey);
+    }
+
+
+    public static String md5Encrypt16(String string) {
+        return md5Encrypt32(string).substring(8, 24);
+    }
+
+    public static String md5Encrypt32(String encryptStr) {
+        MessageDigest md5;
+        try {
+            md5 = MessageDigest.getInstance("MD5");
+            byte[] md5Bytes = md5.digest(encryptStr.getBytes());
+            StringBuffer hexValue = new StringBuffer();
+            for (int i = 0; i < md5Bytes.length; i++) {
+                int val = ((int) md5Bytes[i]) & 0xff;
+                if (val < 16)
+                    hexValue.append("0");
+                hexValue.append(Integer.toHexString(val));
+            }
+            encryptStr = hexValue.toString();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return encryptStr;
     }
 }

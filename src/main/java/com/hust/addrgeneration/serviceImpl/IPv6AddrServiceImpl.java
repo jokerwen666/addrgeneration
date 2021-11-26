@@ -105,8 +105,19 @@ public class IPv6AddrServiceImpl implements IPv6AddrService {
 
         BigInteger big1 = new BigInteger(str1, 16);
         BigInteger big2 = new BigInteger(str2, 16);
-        String AID = big1.xor(big2).toString(16);
-        userMapper.updateAID(AID, big1.toString(16));
+        String AIDnTH = big1.xor(big2).toString(16);
+        userMapper.updateAID(AIDnTH, big1.toString(16));
+
+        // step4. Generate AID-withTimeHash(aka AID) with AIDnTH and time-Hash
+        LocalDateTime localDateTime3 = LocalDateTime.of(localDateTime1.getYear(),localDateTime1.getMonth(),localDateTime1.getDayOfMonth(),localDateTime1.getHour(),0,0);
+        long nearestTimeHour = localDateTime3.toEpochSecond(ZoneOffset.of("+8"));
+        int timeDifference2 = (int) (nearestTimeHour - baseTime);
+        String timeHash = EncDecUtils.md5Encrypt16(ConvertUtils.decToHexString(timeDifference2,10));
+
+        BigInteger big3 = new BigInteger(AIDnTH,16);
+        BigInteger big4 = new BigInteger(timeHash, 16);
+        String AID = big3.xor(big4).toString(16);
+        userMapper.updateTimeHash(AID, AIDnTH);
 
         StringBuilder suffix = new StringBuilder();
         for (int i = 0; i < AID.length(); i+=4) {
@@ -118,36 +129,32 @@ public class IPv6AddrServiceImpl implements IPv6AddrService {
 
     @Override
     public QueryInfo queryAddr(InfoBean infoBean) throws Exception {
-        // step1. use prefix of the IPv6-address to get key
+        // step1. use prefix of the IPv6-address and calculate time-Hash to get key
         String queryAddress = infoBean.getQueryAddress();
         int pos = getIndexOf(queryAddress, ":", 4);
         String asPrefix = queryAddress.substring(0,pos);
         String asAddress = asPrefix + "::1";
-        List<QueryKeyInfo> queryKeyInfoList = userMapper.getIdeaKey(asAddress);
-        if (queryKeyInfoList.size() == 0) {
-            throw new Exception("获取密钥出错！密钥集为空");
-        }
-        String ideaKey = queryKeyInfoList.get(0).getIdeaKey();
-
-        // step2. use suffix of IPv6-address to get the whole encrypt data(128-bits)
         String aidStr = queryAddress.substring(pos+1);
         String AID = aidStr.replace(":","");
-        String prefix = userMapper.getPrefix(AID);
+        String AIDnTH = userMapper.getAIDnTH(AID);
 
         BigInteger big1 = new BigInteger(AID, 16);
-        BigInteger big2 = new BigInteger(prefix, 16);
-        String suffix = big1.xor(big2).toString(16);
+        BigInteger big2 = new BigInteger(AIDnTH, 16);
+        String timeHash = big1.xor(big2).toString(16);
+        String ideaKey = userMapper.getIdeaKey(asAddress, timeHash);
+        if (ideaKey == null)
+            throw new Exception("获取密钥出错！密钥集为空");
+
+        // step2. use suffix of IPv6-address to get the whole encrypt data(128-bits)
+
+        String prefix = userMapper.getPrefix(AIDnTH);
+        BigInteger big3 = new BigInteger(AIDnTH, 16);
+        BigInteger big4 = new BigInteger(prefix, 16);
+        String suffix = big3.xor(big4).toString(16);
         String preAID = prefix + suffix;
 
         // step3. use the proper key to decrypt the encrypt data(128-bits)
-        int listSize = queryKeyInfoList.size();
-        String rawAID = null;
-        for (int i = 0; i < listSize; i++) {
-            ideaKey = queryKeyInfoList.get(i).getIdeaKey();
-            rawAID = EncDecUtils.ideaDecrypt(preAID, ideaKey);
-            if (rawAID != null && rawAID.length() == 16) break;
-        }
-
+        String rawAID = EncDecUtils.ideaDecrypt(preAID, ideaKey);
         if (rawAID == null || rawAID.length() != 16)
             throw new Exception("解密出错！");
 

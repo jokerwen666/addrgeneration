@@ -3,6 +3,7 @@ package com.hust.addrgeneration.serviceImpl;
 import com.hust.addrgeneration.beans.KeyInfo;
 import com.hust.addrgeneration.dao.UserMapper;
 import com.hust.addrgeneration.encrypt.IDEAUtils;
+import com.hust.addrgeneration.utils.ConvertUtils;
 import com.hust.addrgeneration.utils.EncDecUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,18 +31,19 @@ public class KeyGenerateServiceImpl {
         EncDecUtils.ideaKey = IDEAUtils.getKey();
         LocalDateTime localDateTime1 = LocalDateTime.now();
         LocalDateTime localDateTime2 = LocalDateTime.of(localDateTime1.getYear(),1,1,0,0,0);
-
-        long currentTime = localDateTime1.toEpochSecond(ZoneOffset.of("+8"));
+        LocalDateTime localDateTime3 = LocalDateTime.of(localDateTime1.getYear(),localDateTime1.getMonth(),localDateTime1.getDayOfMonth(),localDateTime1.getHour(),0,0);
+        long currentTime = localDateTime3.toEpochSecond(ZoneOffset.of("+8"));
         long baseTime = localDateTime2.toEpochSecond(ZoneOffset.of("+8"));
-
         int timeInfo = (int) (currentTime - baseTime);
+        String timeHash = EncDecUtils.md5Encrypt16(ConvertUtils.decToHexString(timeInfo,10));
+
         logger.info("时间" + timeInfo);
         String genAddrIP = "2001:250:4000:511a::1";
 
         KeyInfo keyInfo =new KeyInfo();
         keyInfo.setAddrGenIP(genAddrIP);
         keyInfo.setIdeaKey(EncDecUtils.ideaKey);
-        keyInfo.setTimeInfo(timeInfo);
+        keyInfo.setTimeHash(timeHash);
         userMapper.updateKey(keyInfo);
     }
 

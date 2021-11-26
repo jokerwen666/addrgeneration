@@ -12,8 +12,10 @@ public interface UserMapper {
     int register(String NID, String password, String userID, String phoneNumber);
     int updateKey(KeyInfo keyInfo);
     int updateAID(String aid, String prefix);
+    int updateTimeHash(String AID, String AIDnTH);
     String getKey(String NID);
+    String getAIDnTH(String AID);
     String getPrefix(String AID);
-    List<QueryKeyInfo> getIdeaKey(String addrGenIP);
+    String getIdeaKey(String addrGenIP, String timeHash);
     QueryInfo queryAddrInfo(String NID);
 }

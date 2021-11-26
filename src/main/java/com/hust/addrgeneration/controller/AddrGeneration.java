@@ -72,7 +72,7 @@ public class AddrGeneration {
         } catch (Exception e) {
             backHtml.setStatus(0);
             if (e.getMessage() == null)
-                backHtml.setMessage("用户尚未注册！请先注册");
+                backHtml.setMessage("查询地址不存在！");
             else
                 backHtml.setMessage(e.getMessage());
             return backHtml;

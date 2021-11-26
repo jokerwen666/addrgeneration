@@ -6,7 +6,15 @@ import org.springframework.stereotype.Component;
 public class KeyInfo {
     private String addrGenIP;
     private String ideaKey;
-    private int timeInfo;
+    private String timeHash;
+
+    public String getTimeHash() {
+        return timeHash;
+    }
+
+    public void setTimeHash(String timeHash) {
+        this.timeHash = timeHash;
+    }
 
     public String getAddrGenIP() {
         return addrGenIP;
@@ -24,11 +32,4 @@ public class KeyInfo {
         this.ideaKey = ideaKey;
     }
 
-    public int getTimeInfo() {
-        return timeInfo;
-    }
-
-    public void setTimeInfo(int timeInfo) {
-        this.timeInfo = timeInfo;
-    }
 }

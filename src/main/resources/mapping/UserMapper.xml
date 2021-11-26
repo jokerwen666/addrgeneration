@@ -15,26 +15,30 @@
     </select>
 
     <insert id="updateKey" parameterType="com.hust.addrgeneration.beans.KeyInfo">
-        insert into keyinfo (addrGenIP, ideakey, timeinfo)
-        values (#{addrGenIP}, #{ideaKey}, #{timeInfo})
+        insert into keyinfo (addrGenIP, ideakey, timehash)
+        values (#{addrGenIP}, #{ideaKey}, #{timeHash})
     </insert>
     
-    <select id="getIdeaKey" parameterType="String" resultMap="QueryKeyList">
-        select ideakey, timeinfo from keyinfo where addrGenIP = #{addrGenIP}
-        order by timeinfo desc
+    <select id="getIdeaKey" parameterType="String" resultType="String">
+        select ideakey from keyinfo where addrGenIP = #{addrGenIP} and timehash = #{timeHash}
     </select>
-    <resultMap id="QueryKeyList" type="com.hust.addrgeneration.beans.QueryKeyInfo">
-        <result column="ideakey" property="ideaKey" />
-        <result column="timeinfo" property="timeInfo" />
-    </resultMap>
 
     <insert id="updateAID" parameterType="String">
         insert into aidinfo (aid, prefix)
-        values (#{aid}, #{prefix});
+        values (#{aid}, #{prefix})
     </insert>
 
     <select id="getPrefix" parameterType="String" resultType="String">
         select prefix from aidinfo where aid = #{AID}
+    </select>
+
+    <insert id="updateTimeHash" parameterType="String">
+        insert into timehash (AIDnTH, AID)
+        values (#{AIDnTH}, #{AID})
+    </insert>
+
+    <select id="getAIDnTH" parameterType="String" resultType="String">
+        select AIDnTH from timehash where AID = #{AID}
     </select>
 
 </mapper>
