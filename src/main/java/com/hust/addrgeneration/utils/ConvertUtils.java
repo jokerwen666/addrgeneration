@@ -45,6 +45,11 @@ public class ConvertUtils {
         return patchBinString(result, maxLength);
     }
 
+    public static int binStringToDec(String binString) {
+        BigInteger bigInteger = new BigInteger(binString, 2);
+        return Integer.parseInt(binString.toString());
+    }
+
     public static String binStringToHexString(String binString) {
         String result = "";
         int len = binString.length();
@@ -175,7 +180,7 @@ public class ConvertUtils {
     public static byte[] hexStringToByte(String hex)
             throws IllegalArgumentException {
         if (hex.length() % 2 != 0) {
-            throw new IllegalArgumentException();
+            hex = "0" + hex;
         }
         char[] arr = hex.toCharArray();
         byte[] b = new byte[hex.length() / 2];

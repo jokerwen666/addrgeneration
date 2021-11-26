@@ -13,8 +13,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.text.SimpleDateFormat;
+import java.time.*;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -90,17 +91,17 @@ public class IPv6AddrServiceImpl implements IPv6AddrService {
         /*
          the raw time difference maybe over 24-bits, so we use proper degree of accuracy to change the time difference into a proper format
          the degrees of accuracy can be 30s 10s or 5s
-         the max value of time difference is 31,536,000, the max value of 24-bits is 16,777,215
+         the max value of time difference is 31,536,000, the max value of 25-bits is 16,777,215
          so every degree can make the value of time difference smaller than the max value of 24-bits
          */
         int timeDifference = (int) (( currentTime - baseTime ) / 10);
         String timeInformation = ConvertUtils.decToBinString(timeDifference, 24);
         String rawAID = NID + ConvertUtils.binStringToHexString(timeInformation);
 
-        // step3. Generate AID with UID and time information
+        // step3. Generate AID-noTimeHash(aka AID_nTH) with UID and time information
         String preAID = EncDecUtils.ideaEncrypt(rawAID, EncDecUtils.ideaKey);
         String str1 = preAID.substring(0,16);
-        String str2 = preAID.substring(17,32);
+        String str2 = preAID.substring(16,32);
 
         BigInteger big1 = new BigInteger(str1, 16);
         BigInteger big2 = new BigInteger(str2, 16);
@@ -138,18 +139,32 @@ public class IPv6AddrServiceImpl implements IPv6AddrService {
         String suffix = big1.xor(big2).toString(16);
         String preAID = prefix + suffix;
 
+        // step3. use the proper key to decrypt the encrypt data(128-bits)
+        int listSize = queryKeyInfoList.size();
+        String rawAID = null;
+        for (int i = 0; i < listSize; i++) {
+            ideaKey = queryKeyInfoList.get(i).getIdeaKey();
+            rawAID = EncDecUtils.ideaDecrypt(preAID, ideaKey);
+            if (rawAID != null && rawAID.length() == 16) break;
+        }
 
-        // in this step, we should find the proper key to decrypt the rawAID(decrypted)
-        // Function not implemented !!!!
-        String rawAID = EncDecUtils.ideaDecrypt(preAID, ideaKey);
-        if (rawAID == null)
+        if (rawAID == null || rawAID.length() != 16)
             throw new Exception("解密出错！");
 
-        // step3. use the proper key to decrypt the encrypt data(128-bits)
-
         // step4. use the NID to query user information the return the info(userID, phoneNumber, address-generate-time etc.) to user
+        String NID = rawAID.substring(0,10);
+        String timeInfoStr = ConvertUtils.hexStringToBinString(rawAID.substring(10));
+        int timeInfo = Integer.parseInt(timeInfoStr, 2) * 10;
+        LocalDateTime localDateTime2 = LocalDateTime.of(LocalDate.now().getYear(), 1, 1, 0, 0, 0);
+        long baseTime = localDateTime2.toEpochSecond(ZoneOffset.of("+8"));
+        long registerTime = (baseTime + timeInfo);
 
-        return null;
+        Instant instant = Instant.ofEpochSecond(registerTime);
+        LocalDateTime registerTimeStr = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+
+        QueryInfo queryInfo = userMapper.queryAddrInfo(NID);
+        queryInfo.setRegisterTime(registerTimeStr.toString());
+        return queryInfo;
     }
 
     private int getIndexOf(String data, String str, int num) {

@@ -1,6 +1,7 @@
 package com.hust.addrgeneration.dao;
 
 import com.hust.addrgeneration.beans.KeyInfo;
+import com.hust.addrgeneration.beans.QueryInfo;
 import com.hust.addrgeneration.beans.QueryKeyInfo;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +15,5 @@ public interface UserMapper {
     String getKey(String NID);
     String getPrefix(String AID);
     List<QueryKeyInfo> getIdeaKey(String addrGenIP);
+    QueryInfo queryAddrInfo(String NID);
 }
