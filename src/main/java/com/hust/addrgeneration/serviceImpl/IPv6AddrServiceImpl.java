@@ -91,7 +91,7 @@ public class IPv6AddrServiceImpl implements IPv6AddrService {
         /*
          the raw time difference maybe over 24-bits, so we use proper degree of accuracy to change the time difference into a proper format
          the degrees of accuracy can be 30s 10s or 5s
-         the max value of time difference is 31,536,000, the max value of 25-bits is 16,777,215
+         the max value of time difference is 31,536,000, the max value of 2４-bits is 16,777,215
          so every degree can make the value of time difference smaller than the max value of 24-bits
          */
         int timeDifference = (int) (( currentTime - baseTime ) / 10);
